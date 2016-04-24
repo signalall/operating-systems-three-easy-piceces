@@ -11,7 +11,7 @@
 * [8 调度：The Multi-Level Feedback Queue](chapter8.md)
 * [9 调度：均匀的共享](chapter9.md)
 * [10 多处理器调度（高级）](chapter10.md)
-* 11 CPU虚拟化的总结对话
+* [11 CPU虚拟化的总结对话](chapter11.md)
 * 13 抽象：地址空间
 * 14 插曲：内存API
 * 15 机制：地址翻译
