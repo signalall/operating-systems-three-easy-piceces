@@ -1,1 +1,1 @@
-# operating-systems-three-easy-piceces
+# Operating Systems Three Easy Piceces
