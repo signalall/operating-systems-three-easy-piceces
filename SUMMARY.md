@@ -9,7 +9,7 @@
 * [6 机制：有限的直接执行](chapter6.md)
 * [7 调度： 介绍](chapter7.md)
 * [8 调度：The Multi-Level Feedback Queue](chapter8.md)
-* 9 调度：均匀的共享
+* [9 调度：均匀的共享](chapter9.md)
 * 10 多处理器调度（高级）
 * 11 CPU虚拟化的总结对话
 * 13 抽象：地址空间
