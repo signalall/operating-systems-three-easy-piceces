@@ -38,7 +38,7 @@
 * III 持久化
 * [35 有关持久化的对话](chapter35.md)
 * 36 I/O设备
-* 37 硬盘驱动
+* [37 硬盘驱动](chapter37.md)
 * [38 磁盘阵列（RAIDs）](chapter38.md)
 * [39 插曲：文件与目录](chapter39.md)
 * [40 文件系统实现](chapter40.md)
