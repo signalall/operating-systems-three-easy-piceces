@@ -23,36 +23,13 @@
 
 主程序创建两个线程，每个都执行函数mythread()，但是传递不同的参数（字符串『A』或『B』）。一旦创建了线程，它可能会立即运行（取决于调度器的whims）；也可能会进入**就绪**态而非**运行**态，因此不立即执行。创建两个线程之后（T1和T2），主线程调用pthread_join()等待对应的线程结束。
 
-```
-#include <stdio.h>
-#include <assert.h>
-#include <pthread.h>
-
-void *mythread(void *arg) {
-    printf("%s\n", (char *) arg);
-    return NULL;
-}
-
-int main(int argc, char *argv[]) {
-    pthread_t p1, p2;
-    int rc;
-    printf("main: begin\n");
-    rc = pthread_create(&p1, NULL, mythread, "A"); assert(rc == 0);
-    rc = pthread_create(&p2, NULL, mythread, "B"); assert(rc == 0);
-    // join waits for the threads to finish
-    rc = pthread_join(p1, NULL); assert(rc == 0);
-    rc = pthread_join(p2, NULL); assert(rc == 0);
-    printf("main: end\n");
-    return 0;
-}
-```
-
+![](26_2.png)
 
 我们来看一下这个小程序可能的执行顺序，在执行示意图中（表 26.1），时间从上向下依次增长，每一栏显示了什么时候运行不同的线程（主线程、线程T1、或线程T2）。
 
 然而，注意这个顺序并不是唯一的执行顺序。实际上，对于一个给定的指令序列，它有不少的可能执行顺序，这取决于在特定的时刻调度器决定哪个线程能得到执行。比如，一旦创建了一个线程，它可能立即执行，如表26.2所示的执行顺序。
 
-我们也可以看到**B**在**A**之前打印出来，这就是说调度器决定先执行线程T2，即使线程T1更早创建；没有任何理由取假设先创建的线程就先运行。表26.3显示了这个执行顺序，线程T2*******with Thread 2 getting to strut its stuff before Thread 1.
+我们也可以看到**B**在**A**之前打印出来，这就是说调度器决定先执行线程T2，即使线程T1更早创建；没有任何理由取假设先创建的线程就先运行。表26.3显示了这个执行顺序，线程T with Thread 2 getting to strut its stuff before Thread 1.
 
 As you might be able to see, one way to think about thread creation is that it is a bit like making a function call; however, instead of first executing the function and then returning to the caller, the system instead creates a new thread of execution for the routine that is being called, and it runs independently of the caller, perhaps before returning from the create, but perhaps much later. 
 
@@ -60,46 +37,9 @@ As you also might be able to tell from this example, threads make life complicat
 ![](26_3.png)
 ![](26_4.png)
 ![](26_5.png)
-```
-#include <stdio.h>
-#include <pthread.h>
-#include "mythreads.h"
 
-static volatile int counter = 0;
+![](26_6.png)
 
-/* Simply adds 1 to counter repeatedly, in a loop. No, this is not how 
- * you would add 10,000,000 to a counter, but it shows the problem nicely. */
-
-void *mythread(void *arg) {
-    printf("%s: begin\n", (char *) arg);
-    int i;
-    for (i = 0; i < 1e7; i++) {
-        counter = counter + 1;
-    }
-    printf("%s: done\n", (char *) arg);
-    return NULL;
-}
-
-/* Just launches two threads (pthread_create) and then waits for them (pthread_join) */
-
-int main(int argc, char *argv[]) {
-    pthread_t p1, p2;
-    printf("main: begin (counter = %d)\n", counter);
-    Pthread_create(&p1, NULL, mythread, "A");
-    Pthread_create(&p2, NULL, mythread, "B");
-
-    // join waits for the threads to finish
-    Pthread_join(p1, NULL);
-    Pthread_join(p2, NULL);
-    printf("main: done with both (counter = %d)\n", counter);
-    return 0;
-}
-\end{lstlisting}
-
-%\begin{figure}[h]
-%\caption{共享数据}
-%\end{figure}
-```
 
 ## 26.2 为何更糟糕：共享数据
 上一节简单的线程示例可以有效的解释线程是如何被创建，以及它们是如何按照不同的顺序运行，这个执行顺序决定于调度器决定如何运行它们。这个示例并没有展示线程间在访问共享数据时是如何交互的。
@@ -167,10 +107,15 @@ add $0x1, %eax
 mov %eax, 0x8049a1c
 ```
 这个例子假设变量counter分配的地址是0x8049a1c。在这个三指令的序列里，x86的mov指令首先取得该地址的内存值并将其放入寄存器eax中，然后，执行add操作，eax寄存器的值加1，最后，eax的值写回原先的内存地址。
+
 我们设想一下两个线程中的一个（线程T1）进入这段代码，它对counter执行了加1操作。它首先加载counter的值（假设其初值是50）进入寄存器eax，因此对线程T1来说寄存器eax的值为50。然后它对寄存器执行加1操作，此时eax的值是51。现在，发生了件不幸的事儿：定时器中断到达；因此，操作系统保存当前运行线程的状态（PC，eax等寄存器）至线程的TCB。
+
 现在发生了更糟糕的事儿：线程T2被调度执行，它进入同一段代码。它也执行第一条指令，获取counter的值并写入它的eax寄存器（注：每个线程在运行时都有自己私有的寄存器；这些寄存器是通过上下文切换代码保存、加载虚拟化出来）。counter的值此时仍然是50，因此线程T2的eax值为50。假设线程T2继续执行接下来的两条指令，eax加1（eax=51），然后保存eax的内容至counter（内存地址0x8049a1c）。因此，全局变量counter此时的值是51。
+
 最后，又一次发生上下文切换，并且线程T1得到了执行。记得刚才仅仅执行过了mov和add指令，那么此时应当执行最后一条mov指令。刚才eax的值是51，因此，最后执行mov指令并将值写入内存；counter的又一次被写为51。
+
 简单的说，事儿是这样的：counter加1的代码执行了两次，但是初值为50的counter现在只有51。但是这个程序『正确的』结果应当是变量counter值为52。
+
 我们来看一下详细的执行路径以便更好的理解这个问题。对于这个例子，假设上述的代码加载到内存地址100处，如下图所示的指令序列（注意那些曾经优秀的精简指令集：x86有变长指令；这里的mov指令占5字节的内存，add指令仅占3字节）：
 ```
 100 mov 0x8049a1c, %eax
@@ -212,9 +157,6 @@ mov %eax, 0x8049a1c
 症结所在：如何为同步提供支持
 
 为了构建有效的同步原语，我恩需要硬件提供什么支持呢？又需要操作系统提供什么支持呢？我们怎么才能正确高效的构建这些原语呢？程序又如何使用他们以得到期望的结果呢？
-
-
-
 
 > 关键并发术语
 这四个术语对于并发代码太核心了，以至于我认为非常值得把它们提出来说一下。详见Dijkstra早期的工作[D65,D68]。
