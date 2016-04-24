@@ -62,6 +62,7 @@ main: done with both (counter = 20000000)
 ```
 
 不幸的是，当我们运行这段代码时，即使是在一个处理器上，我们也得不到那个预期的结果。有时，结果如下：
+
 ```
 prompt> ./main
 main: begin (counter = 0)
