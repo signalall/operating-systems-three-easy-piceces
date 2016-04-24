@@ -29,7 +29,7 @@
 * [26 并发：介绍](chapter26.md)
 * [27 插曲：线程API](chapter27.md)
 * 28 锁
-* 29 基于锁的并发数据结构
+* [29 基于锁的并发数据结构](chapter29.md)
 * [30 条件变量](chapter30.md)
 * [31 信号量](chapter31.md)
 * [32 通常的并发问题](chapter32.md)
