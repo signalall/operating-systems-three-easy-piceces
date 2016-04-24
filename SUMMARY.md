@@ -22,7 +22,7 @@
 * [20 分页：更小的表](chapter20.md)
 * [21 物理内存之上：机制](chapter21.md)
 * [22 物理内存之上：策略](chapter22.md)
-* 23 VAX/VMS 虚拟内存管理
+* [23 VAX/VMS 虚拟内存管理](chapter23.md)
 * [24 内存虚拟化的总结对话](chapter24.md)
 * II 并发
 * [25 有关并发的对话](chapter25.md)
