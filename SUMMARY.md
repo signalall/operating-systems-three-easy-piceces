@@ -6,7 +6,7 @@
 * [3 有关虚拟的对话](chapter3.md)
 * [4 抽象：进程](chapter4.md)
 * [5 插曲：进程API](chapter5.md)
-* 6 机制：有限的直接执行
+* [6 机制：有限的直接执行](chapter6.md)
 * 7 调度： 介绍
 * 8 调度：The Multi-Level Feedback Queue
 * 9 调度：均匀的共享
