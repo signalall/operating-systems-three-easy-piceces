@@ -148,18 +148,16 @@ main: done with both (counter = 19221041)
 
 不仅每一个都是错误的结果，而且每个结果还不一样！大大的疑问：为什么会发生这样的事儿呢？
 
-\begin{tcolorbox}[colframe=grey,colback= grey,arc=0pt,left=6pt,right=6pt,top=6pt,bottom=6pt,boxsep=0pt]
-\begin{center}
-\end{center}
 
 > 技巧：了解并使用你的工具
 > 
 > 你总是需要学习心得工具来帮助你编写、调试和理解计算机系统。这里我们使用一个小巧的工具：反汇编器（disassembler）。当你对一个可执行文件执行反汇编时，它会显示这个可执行文件是有哪些会变代码组成的。例如，如果你希望理解例子中更新counter的底层代码，运行objdump（Linux）来它的汇编代码：
+> ```
+> prompt> objdump -d main
+> ```
 
 
-```
-prompt> objdump -d main
-```
+
 
 ## 26.3 核心问题：失控的调度
 为了理解为何会发生这样的事儿，我们需要理解编译器为更新counter而生成的指令序列。在这个例子里，我们希望简简单单的将counter加1。因此，做这一操作的指令序列也许应该如下（x86）：
