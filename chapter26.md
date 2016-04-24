@@ -149,16 +149,19 @@ main: done with both (counter = 19221041)
 不仅每一个都是错误的结果，而且每个结果还不一样！大大的疑问：为什么会发生这样的事儿呢？
 
 \begin{tcolorbox}[colframe=grey,colback= grey,arc=0pt,left=6pt,right=6pt,top=6pt,bottom=6pt,boxsep=0pt]
-\begin{center}技巧：了解并使用你的工具
+\begin{center}
 \end{center}
 
-你总是需要学习心得工具来帮助你编写、调试和理解计算机系统。这里我们使用一个小巧的工具：反汇编器（disassembler）。当你对一个可执行文件执行反汇编时，它会显示这个可执行文件是有哪些会变代码组成的。例如，如果你希望理解例子中更新counter的底层代码，运行objdump（Linux）来它的汇编代码：
-\begin{verbatim}
-prompt> objdump -d main
-\end{verbatim}
-\end{tcolorbox}
+> 技巧：了解并使用你的工具
+> 
+> 你总是需要学习心得工具来帮助你编写、调试和理解计算机系统。这里我们使用一个小巧的工具：反汇编器（disassembler）。当你对一个可执行文件执行反汇编时，它会显示这个可执行文件是有哪些会变代码组成的。例如，如果你希望理解例子中更新counter的底层代码，运行objdump（Linux）来它的汇编代码：
 
-## 核心问题：失控的调度
+
+```
+prompt> objdump -d main
+```
+
+## 26.3 核心问题：失控的调度
 为了理解为何会发生这样的事儿，我们需要理解编译器为更新counter而生成的指令序列。在这个例子里，我们希望简简单单的将counter加1。因此，做这一操作的指令序列也许应该如下（x86）：
 ```
 mov 0x8049a1c, %eax
@@ -177,28 +180,7 @@ mov %eax, 0x8049a1c
 108 mov %eax, 0x8049a1c
 ```
 基于这些假设，上述发生的事儿如表26.4所示。假设counter起始值是50，然后跟踪这个例子确保你可以理解正在发生什么。
-\begin{table}[h]
-{\footnotesize
-\begin{tabular}{p{3cm} p{3cm} p{3cm} c c c}
- & & & \multicolumn{3}{c|}{after instruction} \\
-\textbf{OS}&\textbf{Thread 1}&\textbf{Thread 2} & \textbf{PC}  & \textbf{\%eax} & \textbf{counter}\\
-\midrule[1.1pt]
- & before critical section &  & 100 & 0 & 50 \\
- & mov 0x8049a1c, \%eax  &  & 105 & 50 & 50\\
- & add \$0x1, \%eax &  & 108 & 51 & 50 \\
- \textbf{interrupt} & & & & & \\
- ~~~~\textsl{save T1's state} & & & & & \\
- ~~~~\textsl{restore T2's state} & & & 100 & 0 & 50 \\
-  & & mov 0x8049a1c, \%eax & 105 & 50 & 50 \\
-  & & add \$0x1, \%eax & 108 & 51 & 50 \\
-  & & mov \%eax, 0x8049a1c & 113 & 51 & 51 \\
-\textbf{interrupt} & & & & & \\
- ~~~~\textsl{save T2's state} & & & & & \\
- ~~~~\textsl{restore T1's state} & & & 108 & 51 & 50 \\
-  & mov \%eax, 0x8049a1c & & 113 & 51 & 51 \\
-\end{tabular}}
-\caption{问题：up close and personal}\color{black}\label{tab26-1}
-\end{table}
+![](26_7.png)
 
 上面已经示范的问题称作：竞争条件，其结果取决于这段代码的执行时机。有时候运气不好（例如：在执行的时候发生不合时宜的上下文切换），就会得到错误的结果。实际上，我们很可能每次都得到不同的值；因此，而不是确定性计算（曾经来源于计算机？？），我们称之为不确定性，不知道输出的会是什么，且这些输出在交叉运行之间很可能会不同。
 
@@ -208,12 +190,12 @@ mov %eax, 0x8049a1c
 
 顺便提一下，实际上所有这些概念都是由Edsger Dijkstra创造出来的。他是这个领域的开拓者，并凭借这个工作和其他成果获得了图灵奖；详见他1968年的论文『Cooperating Sequential Processes』[D68]中对此问题惊人清晰的描述。我们还会在本章中多次看见Dijkstra。
 
-\section{原子性的愿望}
+## 26.4 原子性的愿望
 解决这个问题的一个办
 法是更强大的指令，这些指令可以在单步之内做任何我们需要做的，因此避免了发生不合时宜的中断的可能性。例如，假如我们有一个像下面所示一样的超级指令，会怎样呢？
-\begin{verbatim}
+```
 memory-add 0x8049a1c, $0x1
-\end{verbatim}
+```
 假设这条指令将一个值加到该内存地址，并硬件保证它是原子执行的；当这条指令执行后，它将按照预想的那样执行更新操作。它不会在指令执行中被中断，因为正是我们从硬件那儿得到的保证：当中断发生时，这条指令要么没有执行，要么已经执行结束；没有中间状态。硬件可以如此的美好，不是么？
 在此文中，原子性意味着『作为一个单位』，有时称之为『全或无』。我们想原子地执行这三条指令序列：
 ```
