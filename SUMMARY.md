@@ -50,6 +50,6 @@
 * 46 一个有关分布式的对话
 * 47 分布系统
 * 48 Sun网络文件系统（NFS）
-* 49 Andrew文件系统（AFS）
+* [49 Andrew文件系统（AFS）](chapter49.md)
 * [50 有关分布式的总结对话](chapter50.md)
 
