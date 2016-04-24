@@ -31,9 +31,6 @@
 
 我们也可以看到**B**在**A**之前打印出来，这就是说调度器决定先执行线程T2，即使线程T1更早创建；没有任何理由取假设先创建的线程就先运行。表26.3显示了这个执行顺序，线程T with Thread 2 getting to strut its stuff before Thread 1.
 
-As you might be able to see, one way to think about thread creation is that it is a bit like making a function call; however, instead of first executing the function and then returning to the caller, the system instead creates a new thread of execution for the routine that is being called, and it runs independently of the caller, perhaps before returning from the create, but perhaps much later. 
-
-As you also might be able to tell from this example, threads make life complicated: it is already hard to tell what will run when! Computers are hard enough to understand without concurrency. Unfortunately, with concurrency, it gets worse. Much worse.
 ![](26_3.png)
 ![](26_4.png)
 ![](26_5.png)
