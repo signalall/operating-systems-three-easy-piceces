@@ -2,9 +2,10 @@
 
 ## 目录
 
-* [Introduction](README.md)
+* [关于](README.md)
 * [1 有关本书的对话](chapter1.md)
 * [2 介绍](chapter2.md)
+* [Part I 虚拟化](part1.md)
 * [3 有关虚拟的对话](chapter3.md)
 * [4 抽象：进程](chapter4.md)
 * [5 插曲：进程API](chapter5.md)
@@ -26,7 +27,7 @@
 * [22 物理内存之上：策略](chapter22.md)
 * [23 VAX/VMS 虚拟内存管理](chapter23.md)
 * [24 内存虚拟化的总结对话](chapter24.md)
-* II 并发
+* [Part II 并发](part2.md)
 * [25 有关并发的对话](chapter25.md)
 * [26 并发：介绍](chapter26.md)
 * [27 插曲：线程API](chapter27.md)
@@ -37,7 +38,7 @@
 * [32 通常的并发问题](chapter32.md)
 * [33 基于事件的并发（高级）](chapter33.md)
 * [34 并发的总结对话](chapter34.md)
-* III 持久化
+* [Part III 持久化](part3.md)
 * [35 有关持久化的对话](chapter35.md)
 * [36 I/O设备](chapter36.md)
 * [37 硬盘驱动](chapter37.md)
