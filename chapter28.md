@@ -28,11 +28,25 @@ lock()和unlock()的程序语义很简单。调用程序lock（）试图获取�
 
 ## 28.2 Pthread Locks
 
-## 28.3 Building A Lock
+POSIX库使用互斥量作为锁的名称，因为锁是用来提供线程之间的相斥性，如果一个线程处于临界区，它会阻止其他线程进入临界区直到它已完成因此，当你看到下面的POSIX线程的代码，你应该明白这是做与上文一样的事情（我们再次使用我们的包装是检查在锁和解锁上的错误）：
 
-## 28.4 Evaluating Locks
+```
+1 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+2 
+3 Pthread_mutex_lock(&lock); // wrapper for pthread_mutex_lock()
+4 balance = balance + 1;
+5 Pthread_mutex_unlock(&lock);
+```
 
-## 28.5 Controlling Interupts
+您可能还注意到这里说的POSIX版本传递一个变量给lock和unlock，因为我们可能会使用不同的锁来保护不同变量。这样做可以提高并发性：更倾向于使用不同的锁保护不同的数据和数据结构，从而使更多的线程获取到锁（一更细粒度的方法），而不是在任何时间任何临界区使用同一个锁（粗粒锁定策略）。
+
+## 28.3 构建一个锁
+
+现在，你应该从程序员的角度来看对锁的工作原理有一定的了解。但是，我们应该如何构建一个锁？需要什么样的硬件支持？什么操作系统支持？这正是在本章的其他部分我们将提出的一系列问题。
+
+## 28.4 评估锁
+
+## 28.5 控制中断
 
 ## 28.6 Test And Set (Atomic Exchange)
 
