@@ -24,22 +24,154 @@
 假设我们想运行一个创建两个线程的程序，每个线程各自执行相互独立的任务，打印“A”或“B”。代码如Figure 26.2所示。
 
 主程序创建两个线程，每个都执行函数```mythread()```，但是传递不同的参数（字符串“A”或“B”）。一旦创建了线程，它可能会立即运行（取决于调度器的whims）；也可能会进入**就绪**态而非**运行**态，因此不立即执行。创建两个线程之后（T1和T2），主线程调用```pthread_join()```等待对应的线程结束。
+```
+#include <stdio.h>
+#include <assert.h>
+#include <pthread.h>
 
-![](26_2.png)
+void *mythread(void *arg) {
+    printf("%s\n", (char *) arg);
+    return NULL;
+}
+
+int main(int argc, char *argv[]) {
+    pthread_t p1, p2;
+    int rc;
+    printf("main: begin\n");
+    rc = pthread_create(&p1, NULL, mythread, "A");
+    assert(rc == 0);
+    rc = pthread_create(&p2, NULL, mythread, "B");
+    assert(rc == 0);
+    // join waits for the threads to finish
+    rc = pthread_join(p1, NULL);
+    assert(rc == 0);
+    rc = pthread_join(p2, NULL);
+    assert(rc == 0);
+    printf("main: end\n");
+    return 0;
+}
+```
+**Fiture 26.2: Simple Thread Creation Code (t0.c)**
+
 
 我们来看一下这个小程序可能的执行顺序，在执行示意图中（图26.3），时间从上向下依次增长，每一栏显示了什么时候运行不同的线程（主线程、线程T1、或线程T2）。
 
 然而，注意这个顺序并不是唯一的执行顺序。实际上，对于一个给定的指令序列，它有不少的可能执行顺序，这取决于在特定的时刻调度器决定哪个线程能得到执行。比如，一旦创建了一个线程，它可能立即执行，如图26.4所示的执行顺序。
-![](26_4.png)
+
+
+|main| Thread 1 | Thread 2 |
+| -- | -- | -- |
+|starts running|  |  |
+|prints "main:begin"| |  |
+|create Thread 1| |  |
+|create Thread 2|   |  |
+| wait for T1| |  |
+|| runs |  |
+|| prints "A"||
+|| returns| |
+| wait for T2| |  |
+||   | runs|
+||   | prints "B"|
+||   | returns|
+| prints "main:end" | |  |
+**Fiture 28.3: Thread Trace (1)**
+
+
+|main| Thread 1 | Thread 2 |
+| -- | -- | -- |
+|starts running|  |  |
+|prints "main:begin"| |  |
+|create Thread 1| |  |
+|| runs |  |
+|| prints "A"||
+|| returns| |
+|create Thread 2|   |  |
+||   | runs|
+||   | prints "B"|
+||   | returns|
+| wait for T1| |  |
+| *returns immediately; Th1 is done*| |  |
+| wait for T2 | |  |
+| *returns immediately; Th2 is done*| |  |
+| prints "main:end" | |  |
+**Fiture 28.4: Thread Trace (2)**
+
+
+
 
 我们也可以看到“B”在“A”之前打印出来，这就是说调度器决定先执行线程T2，即使线程T1更早创建；没有任何理由取假设先创建的线程就先运行。图26.5显示了这个执行顺序，线程T with Thread 2 getting to strut its stuff before Thread 1.
 
+|main| Thread 1 | Thread 2 |
+| -- | -- | -- |
+|starts running|  |  |
+|prints "main:begin"| |  |
+|create Thread 1| |  |
+|create Thread 2|   |  |
+||   | runs|
+||   | prints "B"|
+||   | returns|
+| wait for T1| |  |
+|| runs |  |
+|| prints "A"||
+|| returns| |
+| wait for T2| |  |
+| *returns immediately; T2 is done*| |  |
+| prints "main:end" | |  |
+**Fiture 28.5: Thread Trace (3)**
 
 
-![](26_5.png)
 
-![](26_6.png)
 
+
+
+
+
+```
+#include <stdio.h>
+#include <pthread.h>
+#include "mythreads.h"
+
+static volatile int counter = 0;
+
+//
+// mythread()
+//
+// Simply adds 1 to counter repeatedly, in a loop
+// No, this is not how you would add 10,000,000 to
+// a counter, but it shows the problem nicely.
+//
+void *
+mythread(void *arg) {
+    printf("%s: begin\n", (char *) arg);
+    int i;
+    for (i = 0; i < 1e7; i++) {
+        counter = counter + 1;
+    }
+    printf("%s: done\n", (char *) arg);
+    return NULL;
+}
+
+//
+// main()
+//
+// Just launches two threads (pthread_create)
+// and then waits for them (pthread_join)
+//
+int
+main(int argc, char *argv[]) {
+    pthread_t p1, p2;
+    printf("main: begin (counter = %d)\n", counter);
+    Pthread_create(&p1, NULL, mythread, "A");
+    Pthread_create(&p2, NULL, mythread, "B");
+
+    // join waits for the threads to finish
+    Pthread_join(p1, NULL);
+    Pthread_join(p2, NULL);
+    printf("main: done with both (counter = %d)\n", counter);
+    return 0;
+}
+```
+**Figure 26.6: Sharing Data: Oh Oh (t1.c)**
 
 ## 26.2 为何更糟糕：共享数据
 
@@ -98,11 +230,13 @@ main: done with both (counter = 19221041)
 
 ## 26.3 核心问题：失控的调度
 为了理解为何会发生这样的事儿，我们需要理解编译器为更新```counter```而生成的指令序列。在这个例子里，我们希望简简单单的将```counter```加1。因此，做这一操作的指令序列也许应该如下（x86）：
-```
+
+
 mov 0x8049a1c, %eax
 add $0x1, %eax
 mov %eax, 0x8049a1c
-```
+
+
 这个例子假设变量```counter```分配的地址是0x8049a1c。在这个三指令的序列里，x86的mov指令首先取得该地址的内存值并将其放入寄存器eax中，然后，执行add操作，eax寄存器的值加1，最后，eax的值写回原先的内存地址。
 
 我们设想一下两个线程中的一个（线程T1）进入这段代码，它对```counter```执行了加1操作。它首先加载```counter```的值（假设其初值是50）进入寄存器eax，因此对线程T1来说寄存器eax的值为50。然后它对寄存器执行加1操作，此时eax的值是51。现在，发生了件不幸的事儿：定时器中断到达；因此，操作系统保存当前运行线程的状态（PC，eax等寄存器）至线程的TCB。
@@ -114,13 +248,33 @@ mov %eax, 0x8049a1c
 简单的说，事儿是这样的：```counter```加1的代码执行了两次，但是初值为50的```counter```现在只有51。但是这个程序“正确的”结果应当是变量```counter```值为52。
 
 我们来看一下详细的执行路径以便更好的理解这个问题。对于这个例子，假设上述的代码加载到内存地址100处，如下图所示的指令序列（注意那些曾经优秀的精简指令集：x86有变长指令；这里的mov指令占5字节的内存，add指令仅占3字节）：
-```
+
 100 mov 0x8049a1c, %eax
 105 add $0x1, %eax
 108 mov %eax, 0x8049a1c
-```
+
 基于这些假设，上述发生的事儿如图26.7所示。假设```counter```起始值是50，然后跟踪这个例子确保你可以理解正在发生什么。
-![](26_7.png)
+
+
+|OS| Thread 1 | Thread 2 |PC|%eax|counter|
+| -- | -- | -- | -- | -- |--|
+||*before critical section*||100|0|50|
+||mov 0x8049a1c, %eax||105|**50**|50|
+||add $0x1, %eax|  |108|**51**|50|
+|**interrupt**||||||
+|*save T1's state*||||||
+|*restore T2's state*||||||
+||||100|0|50|
+|||mov 0x8049a1c, %eax|100|**50**|50|
+|||add %0x1, %eax|100|**51**|50|
+|||mov %eax, 0x8049a1c|105|50|**51**|
+|**interrupt**||||||
+|*save T2's state*||||||
+|*restore T1's state*||||||
+||||108|51|50|
+||mov %eax, 0x8049a1c||113|51|**51**|
+
+**Figure 26.7: The Problem: Up Close and Personal**
 
 上面已经示范的问题称作：竞争条件，其结果取决于这段代码的执行时机。有时候运气不好（例如：在执行的时候发生不合时宜的上下文切换），就会得到错误的结果。实际上，我们很可能每次都得到不同的值；因此，而不是确定性计算（曾经来源于计算机？？），我们称之为不确定性，不知道输出的会是什么，且这些输出在交叉运行之间很可能会不同。
 
@@ -133,16 +287,16 @@ mov %eax, 0x8049a1c
 ## 26.4 原子性的愿望
 解决这个问题的一个办
 法是更强大的指令，这些指令可以在单步之内做任何我们需要做的，因此避免了发生不合时宜的中断的可能性。例如，假如我们有一个像下面所示一样的超级指令，会怎样呢？
-```
+
 memory-add 0x8049a1c, $0x1
-```
+
 假设这条指令将一个值加到该内存地址，并硬件保证它是原子执行的；当这条指令执行后，它将按照预想的那样执行更新操作。它不会在指令执行中被中断，因为正是我们从硬件那儿得到的保证：当中断发生时，这条指令要么没有执行，要么已经执行结束；没有中间状态。硬件可以如此的美好，不是么？
 在此文中，原子性意味着“作为一个单位”，有时称之为“全或无”。我们想原子地执行这三条指令序列：
-```
-mov 0x8049a1c, %eax
+
+mov 0x8049a1c,%eax
 add $0x1, %eax
 mov %eax, 0x8049a1c
-```
+
 
 如之前所说的，如果有一条单独指令能够完成这个操作，那么只需要发出指令即可完成。但是通常情况下，没有这样的指令。设想我们已经构建了一个并发的B树，此时想要更新它；难道要硬件支持『B树的原子更新』指令么？恐怕不可能，至少在合理的指令集中是如此。
 
@@ -157,12 +311,10 @@ mov %eax, 0x8049a1c
 
 > 关键并发术语
 这四个术语对于并发代码太核心了，以至于我认为非常值得把它们提出来说一下。详见Dijkstra早期的工作[D65,D68]。
-> * 临界区，临界区是一段访问共享资源的代码段，共享资源一般是一个变量或数据结构
-> * 竞争条件，竞争条件发生在正在执行的多个线程几乎同时进入临界区；多个线程都试图更新共享数据结构，同时导致产生奇怪（可能非预期）的结果。
-> * 不确定性，一段不确定的程序有一个或多个竞争条件组成，一次一次执行的输出变化不一，视不同线程何时运行而定。因此结果是不确定的，通常我们指望着计算机系统。
-> * 互斥，为了避免这个这些问题，线程需要使用某种互斥原语；以此保证只有一个线程已经进入临界区，从而避免竞争得到确定性的结果。
-
-
+> 临界区，临界区是一段访问共享资源的代码段，共享资源一般是一个变量或数据结构
+> 竞争条件，竞争条件发生在正在执行的多个线程几乎同时进入临界区；多个线程都试图更新共享数据结构，同时导致产生奇怪（可能非预期）的结果。
+>不确定性，一段不确定的程序有一个或多个竞争条件组成，一次一次执行的输出变化不一，视不同线程何时运行而定。因此结果是不确定的，通常我们指望着计算机系统。
+> 互斥，为了避免这个这些问题，线程需要使用某种互斥原语；以此保证只有一个线程已经进入临界区，从而避免竞争得到确定性的结果。
 
 ## 26.5 另一个问题：等待其他线程
 

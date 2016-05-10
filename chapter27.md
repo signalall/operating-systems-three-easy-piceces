@@ -51,7 +51,35 @@ int pthread_create(..., // 前两个参数一样
 ```
 int pthread_join(pthread_t thread, void **valut_ptr);
 ```
-![](27_1.png)
+
+
+```
+#include <pthread.h>
+
+typedef struct __myarg_t {
+    int a;
+    int b;
+} myarg_t;
+
+void *mythread(void *arg) {
+    myarg_t *m = (myarg_t *) arg;
+    printf("%d %d\n", m->a, m->b);
+    return NULL;
+}
+int
+main(int argc, char *argv[]) {
+    pthread_t p;
+    int rc;
+
+    myarg_t args;
+    args.a = 10;
+    args.b = 20;
+    rc = pthread_create(&p, NULL, mythread, &args);
+    ...
+}
+```
+**Figure 27.1: Creating a Thread**
+
 
 这个函数有两个参数。第一个pthread_t类型的参数，被用于指定等待哪个线程。 该变量由创建函数初始化（传入```pthread_t```的指针给```pthread_create()```）。如果你持有着它，你可以用它来等待线程的终止。
 
@@ -61,12 +89,79 @@ int pthread_join(pthread_t thread, void **valut_ptr);
 
 这个例子有几件事情需要注意。首先，很多时候，我们不需要通过的打包和解包参数。 例如，如果我们只是创建一个无参数的线索，我们可以传递NULL来创建的线程。同样，如果我们不关心的返回值，我们可以传递NULL给```pthread_join()```方法。
 
-![](27_2.png)
+```
+#include <stdio.h>
+#include <pthread.h>
+#include <assert.h>
+#include <stdlib.h>
+
+typedef struct __myarg_t {
+    int a;
+    int b;
+} myarg_t;
+
+typedef struct __myret_t {
+    int x;
+    int y;
+} myret_t;
+
+void *mythread(void *arg) {
+    myarg_t *m = (myarg_t *) arg;
+    printf("%d %d\n", m->a, m->b);
+    myret_t *r = Malloc(sizeof(myret_t));
+    r->x = 1;
+    r->y = 2;
+    return (void *) r;
+}
+
+int
+main(int argc, char *argv[]) {
+    int rc;
+    pthread_t p;
+    myret_t *m;
+
+    myarg_t args;
+    args.a = 10;
+    args.b = 20;
+    Pthread_create(&p, NULL, mythread, &args);
+    Pthread_join(p, (void **) &m);
+    printf("returned %d %d\n", m->x, m->y);
+    return 0;
+}
+```
+**Figure 27.2: Waiting for Thread Completion**
+
+
 
 第二，如果我们只是传递一个值（比如一个int），我们不需要打包。图27.3示出了一个例子。 在这种情况下，生活简单了许多，因为我们没有用结构体来包装参数和返回值。
 
 第三，我们应该注意到，必须十分特别小心从一个线程返回的值。特别是，永远不要返回一个指向调用堆栈上分类内存的指针。如果你这样做，你觉得会发生什么？ （想想吧！）下面是一个例子危险的一段代码，如图从示例修改27.2。
-![](27_3.png)
+
+```
+void *mythread(void *arg) {
+    myarg_t *m = (myarg_t *) arg;
+    printf("%d %d\n", m->a, m->b);
+    myret_t r; // ALLOCATED ON STACK: BAD!
+    r.x = 1;
+    r.y = 2;
+    return (void *) &r;
+}
+void *mythread(void *arg) {
+    int m = (int) arg;
+    printf("%d\n", m);
+    return (void *) (arg + 1);
+}
+int main(int argc, char *argv[]) {
+    pthread_t p;
+    int rc, m;
+    Pthread_create(&p, NULL, mythread, (void *) 100);
+    Pthread_join(p, (void **) &m);
+    printf("returned %d\n", m);
+    return 0;
+}
+```
+**Figure 27.3: Simple Argument Passing to a Thread**
+
 
 在这种情况下，变量```r```被分配```mythread```的的堆栈上。然而，当它返回时，该值将自动释放（这就是为什么堆栈很容易使用！），因此，传回的一个释放变量的指针会导致各种不良后果。 当你打印出来的你认为的返回值，你可能会（但不一定！）感到惊讶。自己尝试一下！
 
@@ -76,8 +171,36 @@ int pthread_join(pthread_t thread, void **valut_ptr);
 
 ## 27.3 锁
 
+```
+// Use this to keep your code clean but check for failures
+// Only use if exiting program is OK upon failure
+void Pthread_mutex_lock(pthread_mutex_t *mutex) {
+    int rc = pthread_mutex_lock(mutex);
+    assert(rc == 0);
+}
+```
+**Figure 27.4: An Example Wrapper**
+
 ## 27.4 条件变量
 
+```
+int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
+int pthread_cond_signal(pthread_cond_t *cond);
+```
+```
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+Pthread_mutex_lock(&lock);
+while (ready == 0)
+    Pthread_cond_wait(&cond, &lock);
+Pthread_mutex_unlock(&lock);
+```
+```
+Pthread_mutex_lock(&lock);
+ready = 1;
+Pthread_cond_signal(&cond);
+Pthread_mutex_unlock(&lock);
+```
 ## 27.5 编译与运行
 
 ## 27.6 总结

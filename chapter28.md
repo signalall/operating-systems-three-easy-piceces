@@ -86,7 +86,7 @@ void unlock(lock_t *mutex) {
     mutex->flag = 0;
 }
 ```
-**图28.1：First Attemp：A Simple Flag**
+**Figure 28.1: First Attemp: A Simple Flag**
 
 在最早的尝试中（图28.1），这个想法十分简单：用一个简单的变量来表明某些线程是否持有一个锁。第一个进入临界区的线程会调用```lock()```，它会**测试**表示是否为1（这个示例中，它并不是），然后**设置**这个标志位1来表明线程**持有**着这个锁。当从临界区结束，该线程会调用```unlock()```并清空标志，从而表明锁不再被持有着。
 
@@ -104,7 +104,7 @@ void unlock(lock_t *mutex) {
 |  | interrupt: switch to Thread 1 |
 | flag =1; // set flag to 1(too!) |  |
 
-**图28.2：Trace: No Mutual Exclusion**
+**Fiture 28.2: Trace: No Mutual Exclusion**
 
 正如你在这个交叉中可以看到的，随着适宜和不合时宜的中断，我们可以简单的产生这种情况，两个线程同时设置flag为1因此两个线程都可以进入临界区。这种行为被专业称作为“bad”，我们明显的没有提供最基本的需要：提供一个互斥的环境。
 
