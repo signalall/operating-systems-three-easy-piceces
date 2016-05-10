@@ -1,4 +1,13 @@
-# Operating Systems Three Easy Piceces 中文翻译
+## Operating Systems Three Easy Piceces 中文翻译
+
+* [Gitbook阅读](https://www.gitbook.com/book/yuxiangque/operating-systems-three-easy-piceces/details)
+* [Gihub链接](https://github.com/signalall/operating-systems-three-easy-piceces)
+
+## 完成章节
+
+* [26 并发：介绍](chapter26.md)
+* [27 插曲：线程API](chapter27.md)
+* [28 锁](chapter28.md)
 
 ## 目录
 
@@ -55,3 +64,5 @@
 * [48 Sun网络文件系统（NFS）](chapter48.md)
 * [49 Andrew文件系统（AFS）](chapter49.md)
 * [50 有关分布式的总结对话](chapter50.md)
+
+
