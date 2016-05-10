@@ -171,6 +171,28 @@ int main(int argc, char *argv[]) {
 
 ## 27.3 锁
 
+除了线程创建和加入，下面可能是最有用的是由POSIX线程库提供的一些函数，它通过**锁**向临界区提供互斥，最基本的一对函数如下：
+
+```
+int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
+int pthread_cond_signal(pthread_cond_t *cond);
+```
+
+该例程应该很容易理解和使用。当你认识到一段代码段是一个临界区，因而需要由锁来保护来达到想到的操作。你大概能想象代码什么样：
+
+```
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+Pthread_mutex_lock(&lock);
+while (ready == 0)
+    Pthread_cond_wait(&cond, &lock);
+Pthread_mutex_unlock(&lock);
+```
+
+该代码的意图是：当```pthread_mutex_loc()```被调用时如果没有其他的线程持有锁，该线程将获得锁并进入临界区。如果另一个线程正持有锁，试图获取锁的线程不会从调用返回，直到它获取该锁（这意味着持有锁的线程已经释放锁）。当然，许多线程可能在给定时间内被阻塞等待锁获取函数内；持有持有锁的线程应该调用unlock。
+
+
+不幸的是，这段代码在两个重要方面有问题，。 首先的问题是缺乏适当的初始化。所有锁必须正确初始化，以保证他们拥有正确的初始值。
 ```
 // Use this to keep your code clean but check for failures
 // Only use if exiting program is OK upon failure
@@ -183,18 +205,7 @@ void Pthread_mutex_lock(pthread_mutex_t *mutex) {
 
 ## 27.4 条件变量
 
-```
-int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
-int pthread_cond_signal(pthread_cond_t *cond);
-```
-```
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-Pthread_mutex_lock(&lock);
-while (ready == 0)
-    Pthread_cond_wait(&cond, &lock);
-Pthread_mutex_unlock(&lock);
-```
+
 ```
 Pthread_mutex_lock(&lock);
 ready = 1;
