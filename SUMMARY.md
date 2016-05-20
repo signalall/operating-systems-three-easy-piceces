@@ -3,11 +3,16 @@
 * [Gitbook阅读](https://www.gitbook.com/book/yuxiangque/operating-systems-three-easy-piceces/details)
 * [Gihub链接](https://github.com/signalall/operating-systems-three-easy-piceces)
 
-## 完成章节
+## 已经完成
 
 * [26 并发：介绍](chapter26.md)
 * [27 插曲：线程API](chapter27.md)
 * [28 锁](chapter28.md)
+
+## 正在进行
+
+* [29 基于锁的并发数据结构](chapter29.md)
+* [30 条件变量](chapter30.md)
 
 ## 目录
 

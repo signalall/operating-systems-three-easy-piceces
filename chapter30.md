@@ -264,6 +264,7 @@ void *consumer(void *arg) {
 }
 ```
 ** Figure 30.12: The Final Working Solution**
+
 ## 30.3 Covering Conditions
 
 ```
