@@ -11,7 +11,7 @@
 
 线程与进程之间的另一个重要的区别是栈（stack）。在经典进程（现在可以称之为**单线程**进程，single-threaded process）地址空间的简单模型中，有一个单独的栈，通常位于地址空间的的底端（见下左图）。
 
-![](26_1.png)
+![](images/26_1.png)
 
 然而，在多线程进程中，每个线程独立运行，当然会调用各种各样的routines来完成它正在做的任何工作。跟地址空间中只有一个栈不同，多线程进程中每个线程都有一个栈。假设一个多线程进程内有两个线程，其相应的地址空间与经典进程不一样（见上右图）。
 
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
 ||   | prints "B"|
 ||   | returns|
 | prints "main:end" | |  |
-**Fiture 28.3: Thread Trace (1)**
+**Fiture 26.3: Thread Trace (1)**
 
 
 |main| Thread 1 | Thread 2 |
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
 | wait for T2 | |  |
 | *returns immediately; Th2 is done*| |  |
 | prints "main:end" | |  |
-**Fiture 28.4: Thread Trace (2)**
+**Fiture 26.4: Thread Trace (2)**
 
 
 
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
 | wait for T2| |  |
 | *returns immediately; T2 is done*| |  |
 | prints "main:end" | |  |
-**Fiture 28.5: Thread Trace (3)**
+**Fiture 26.5: Thread Trace (3)**
 
 
 

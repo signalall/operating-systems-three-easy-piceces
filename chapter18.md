@@ -1,6 +1,4 @@
 # 18 分页：介绍
-#
-18 分页：介绍
 
 ```
 // Extract the VPN from the virtual address
